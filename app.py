@@ -8,6 +8,7 @@ import pandas as pd
 import joblib
 import os
 import requests
+import pickle
 
 # Load environment variables
 load_dotenv()
@@ -27,8 +28,14 @@ logs_col     = mongo.db.logs
 forum_col    = mongo.db.forum_posts
 
 # Load ML model and encoders for task time prediction
-model = joblib.load('model.pkl')
-encoders = joblib.load('label_encoders.pkl')
+# model = joblib.load('model.pkl')
+# encoders = joblib.load('label_encoders.pkl')
+
+with open("model.pkl", "rb") as f:
+    model = pickle.load(f)
+
+with open("label_encoders.pkl", "rb") as f:
+    label_encoders = pickle.load(f)
 
 # Ensure default admin exists
 if not users_col.find_one({'username': 'admin'}):
@@ -190,48 +197,117 @@ def translate():
     except:
         return jsonify({'translatedContent':data['text']})
 
-@app.route('/predict_time', methods=['GET','POST'])
-@login_required(role='operator')
-def predict_time():
-    prediction = None
-    if request.method=='POST':
-        form = request.form
-        m = encoders['Machine_Type'].transform([form['machine']])[0]
-        t = encoders['Task_Type'].transform([form['task']])[0]
-        s = encoders['Soil_Type'].transform([form['soil']])[0]
-        features = [[m,t,s,
-                     float(form['distance']), float(form['weight']), int(form['experience']),
-                     float(form['temperature']), int(form['is_rainy']),
-                     float(form['engine_hours']), float(form['fuel_consumed']),
-                     int(form['load_cycles']), float(form['idling_time'])]]
-        pt = model.predict(features)[0]
-        prediction = f"{pt:.2f} minutes"
-    return render_template('predict_time.html', prediction=prediction)
+# @app.route('/predict_time', methods=['GET','POST'])
+# @login_required(role='operator')
+# def predict_time():
+#     prediction = None
+#     if request.method=='POST':
+#         form = request.form
+#         m = encoders['Machine_Type'].transform([form['machine']])[0]
+#         t = encoders['Task_Type'].transform([form['task']])[0]
+#         s = encoders['Soil_Type'].transform([form['soil']])[0]
+#         features = [[m,t,s,
+#                      float(form['distance']), float(form['weight']), int(form['experience']),
+#                      float(form['temperature']), int(form['is_rainy']),
+#                      float(form['engine_hours']), float(form['fuel_consumed']),
+#                      int(form['load_cycles']), float(form['idling_time'])]]
+#         pt = model.predict(features)[0]
+#         prediction = f"{pt:.2f} minutes"
+#     return render_template('predict_time.html', prediction=prediction)
 
-@app.route('/get_weather')
-@login_required(role='operator')
-def get_weather():
-    city = request.args.get('city')
-    key = os.getenv('OPENWEATHER_API')
-    if not city or not key:
-        return jsonify({'error':'City or API key missing'})
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={key}&units=metric"
-    r = requests.get(url)
-    if r.status_code!=200:
-        return jsonify({'error':'Weather fetch failed'})
-    d = r.json()
-    cond = d['weather'][0]['main'].lower()
-    return jsonify({
-        'city':d['name'], 'condition':cond,
-        'description':d['weather'][0]['description'],
-        'temperature':d['main']['temp'], 'humidity':d['main']['humidity'],
-        'is_rainy':1 if 'rain' in cond else 0
-    })
+# @app.route('/get_weather')
+# @login_required(role='operator')
+# def get_weather():
+#     city = request.args.get('city')
+#     key = os.getenv('OPENWEATHER_API')
+#     if not city or not key:
+#         return jsonify({'error':'City or API key missing'})
+#     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={key}&units=metric"
+#     r = requests.get(url)
+#     if r.status_code!=200:
+#         return jsonify({'error':'Weather fetch failed'})
+#     d = r.json()
+#     cond = d['weather'][0]['main'].lower()
+#     return jsonify({
+#         'city':d['name'], 'condition':cond,
+#         'description':d['weather'][0]['description'],
+#         'temperature':d['main']['temp'], 'humidity':d['main']['humidity'],
+#         'is_rainy':1 if 'rain' in cond else 0
+#     })
 
-@app.route('/track_task/<task_name>')
+# @app.route('/track_task/<task_name>',methods=['GET', 'POST'])
+# @login_required(role='operator')
+# def track_task(task_name):
+#     return render_template('track_task.html', task=task_name)
+
+@app.route('/track_task/<task_name>', methods=['GET', 'POST'])
 @login_required(role='operator')
 def track_task(task_name):
-    return render_template('track_task.html', task=task_name)
+    prediction = None
+
+    if request.method == 'POST':
+        # Get form data
+        machine = request.form['machine']
+        task = request.form['task']
+        soil = request.form['soil']
+        distance = float(request.form['distance'])
+        weight = float(request.form['weight'])
+        experience = int(request.form['experience'])
+        temperature = float(request.form['temperature'])
+        is_rainy = int(request.form['is_rainy'])
+        engine_hours = float(request.form['engine_hours'])
+        fuel_consumed = float(request.form['fuel_consumed'])
+        load_cycles = int(request.form['load_cycles'])
+        idling_time = float(request.form['idling_time'])
+
+        # Encode categorical values
+        machine_enc = label_encoders['Machine_Type'].transform([machine])[0]
+        task_enc = label_encoders['Task_Type'].transform([task])[0]
+        soil_enc = label_encoders['Soil_Type'].transform([soil])[0]
+
+        # Feature vector
+        features = [[
+            machine_enc, task_enc, soil_enc, distance, weight, experience,
+            temperature, is_rainy, engine_hours, fuel_consumed, load_cycles, idling_time
+        ]]
+
+        # Predict
+        predicted_time = model.predict(features)[0]
+        prediction = f"{predicted_time:.2f} minutes"
+
+    return render_template('track_task.html', prediction=prediction)
+
+@app.route('/get_weather', methods=['GET'])
+def get_weather():
+    city = request.args.get('city')
+    if not city:
+        return jsonify({'error': 'City not provided'}), 400
+
+    api_key = "4770a89d38d26ba4df1200be94fdf32e"  # Replace with your actual OpenWeatherMap API key
+    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+
+        weather_main = data['weather'][0]['main'].lower()
+        description = data['weather'][0]['description']
+        temp = data['main']['temp']
+        humidity = data['main']['humidity']
+        is_rainy = 1 if 'rain' in weather_main or 'drizzle' in weather_main else 0
+
+        return jsonify({
+            'city': data['name'],
+            'condition': weather_main,
+            'description': description,
+            'temperature': temp,
+            'humidity': humidity,
+            'is_rainy': is_rainy
+        })
+
+    except requests.exceptions.RequestException:
+        return jsonify({'error': 'Failed to fetch weather data'}), 500
 
 if __name__=='__main__':
     app.run(debug=True)
