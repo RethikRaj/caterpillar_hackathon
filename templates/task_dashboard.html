@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Task Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h2>Today's Tasks</h2>
+    <p><strong>Operator:</strong> {{ op }}</p>
+    <p><strong>Role:</strong> {{ role }}</p>
+    <p><strong>Machine:</strong> {{ machine }}</p>
+    <p><strong>Date:</strong> {{ date }}</p>
+
+    <form method="POST">
+      {% for task in tasks %}
+        <div class="post">
+          <input type="checkbox" name="done_{{ loop.index0 }}" {% if task.done %}checked{% endif %}> {{ task.task }}
+          <button name="del_{{ loop.index0 }}" value="1">🗑️</button>
+        </div>
+      {% endfor %}
+      <button type="submit">Save Changes</button>
+    </form>
+
+    <a href="{{ url_for('performance') }}">View Performance</a> |
+    <a href="{{ url_for('forum') }}">Community Forum</a> |
+    <a href="{{ url_for('change_password') }}">Change Password</a> |
+    <a href="{{ url_for('logout') }}">Logout</a>
+  </div>
+</body>
+</html>

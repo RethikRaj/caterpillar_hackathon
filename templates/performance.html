@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Performance Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h2>Performance</h2>
+    <canvas id="perfChart" width="400" height="200"></canvas>
+    <a href="{{ url_for('task_dashboard') }}">⬅ Back to Dashboard</a>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('perfChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: {{ dates|tojson }},
+        datasets: [
+          {
+            label: 'Idle Time (mins)',
+            data: {{ idle_times|tojson }},
+            borderColor: 'orange',
+            fill: false
+          },
+          {
+            label: 'Fuel Used (L)',
+            data: {{ fuel_used|tojson }},
+            borderColor: 'blue',
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
