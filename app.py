@@ -4,8 +4,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from dotenv import load_dotenv
 from deep_translator import GoogleTranslator
+import pandas as pd
+import joblib
 import os
+import requests
 
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
@@ -15,11 +19,16 @@ app.config["MONGO_URI"] = os.getenv("MONGO_URI")
 if not app.config["MONGO_URI"]:
     raise ValueError("MONGO_URI not set or .env file not found!")
 
+# Initialize MongoDB
 mongo = PyMongo(app)
-users_col = mongo.db.users
-tasks_col = mongo.db.tasks
-logs_col  = mongo.db.logs
-forum_col = mongo.db.forum_posts
+users_col    = mongo.db.users
+tasks_col    = mongo.db.tasks
+logs_col     = mongo.db.logs
+forum_col    = mongo.db.forum_posts
+
+# Load ML model and encoders for task time prediction
+model = joblib.load('model.pkl')
+encoders = joblib.load('label_encoders.pkl')
 
 # Ensure default admin exists
 if not users_col.find_one({'username': 'admin'}):
@@ -29,9 +38,9 @@ if not users_col.find_one({'username': 'admin'}):
         'role': 'admin'
     })
 
-# Decorator to restrict access
 from functools import wraps
 
+# Authentication decorator
 def login_required(role=None):
     def wrapper(fn):
         @wraps(fn)
@@ -44,87 +53,17 @@ def login_required(role=None):
         return decorated_view
     return wrapper
 
+# Jinja filter for timestamps
+def datetimeformat(value):
+    return datetime.fromtimestamp(int(value)/1000).strftime('%Y-%m-%d %H:%M:%S')
+app.jinja_env.filters['datetimeformat'] = datetimeformat
+
+# Context processor for navbar
 @app.context_processor
 def inject_user():
     return dict(current_user=session.get('user'), current_role=session.get('role'))
 
-@app.template_filter('datetimeformat')
-def datetimeformat(value):
-    from datetime import datetime
-    return datetime.fromtimestamp(int(value) / 1000).strftime('%Y-%m-%d %H:%M:%S')
-
-@app.route('/change_password', methods=['GET','POST'])
-@login_required()
-def change_password():
-    if request.method == 'POST':
-        old = request.form['old_password']
-        new = request.form['new_password']
-        user = users_col.find_one({'username': session['user']})
-        if not check_password_hash(user['password'], old):
-            flash('Old password incorrect','danger')
-        else:
-            users_col.update_one(
-                {'username': session['user']},
-                {'$set': {'password': generate_password_hash(new)}}
-            )
-            flash('Password updated','success')
-            return redirect(url_for('login') if session['role']=='operator' else url_for('admin_login'))
-    return render_template('change_password.html')
-
-@app.route('/admin_login', methods=['GET','POST'])
-def admin_login():
-    if request.method=='POST':
-        uname = request.form['username']
-        pwd   = request.form['password']
-        user = users_col.find_one({'username': uname, 'role': 'admin'})
-        if user and check_password_hash(user['password'], pwd):
-            session.clear()
-            session['user'] = uname
-            session['role'] = 'admin'
-            return redirect(url_for('admin_dashboard'))
-        flash('Invalid admin credentials','danger')
-    return render_template('admin_login.html')
-
-@app.route('/admin_dashboard', methods=['GET','POST'])
-@login_required(role='admin')
-def admin_dashboard():
-    if request.method=='POST':
-        if 'create_op' in request.form:
-            op = request.form['new_op'].strip()
-            pw = request.form['new_pw']
-            if users_col.find_one({'username': op}):
-                flash('Operator already exists','warning')
-            else:
-                users_col.insert_one({
-                    'username': op,
-                    'password': generate_password_hash(pw),
-                    'role': 'operator'
-                })
-                flash('Operator created','success')
-
-        if 'alloc_submit' in request.form:
-            op    = request.form['op_select']
-            role  = request.form['role_select']
-            date  = request.form['date']
-            raw   = request.form['tasks_raw'].splitlines()
-            tasks = [{"task": t.strip(), "done": False} for t in raw if t.strip()]
-            tasks_col.update_one(
-                {'operator': op, 'role': role, 'date': date},
-                {'$set': {'tasks': tasks}},
-                upsert=True
-            )
-            flash('Tasks allocated','success')
-
-    users = list(users_col.find({'role':'operator'}, {'password':0}))
-    tasks = list(tasks_col.find({}, {'_id':0}))
-    logs  = list(logs_col.find({}, {'_id':0}))
-    return render_template('admin_dashboard.html', users=users, tasks=tasks, logs=logs)
-
-@app.route('/admin_logout')
-def admin_logout():
-    session.clear()
-    return redirect(url_for('admin_login'))
-
+# ========== AUTH ROUTES ==========
 @app.route('/', methods=['GET','POST'])
 def login():
     if request.method=='POST':
@@ -139,12 +78,57 @@ def login():
         flash('Invalid credentials','danger')
     return render_template('login.html')
 
+@app.route('/admin_login', methods=['GET','POST'])
+def admin_login():
+    if request.method=='POST':
+        uname = request.form['username']
+        pwd = request.form['password']
+        user = users_col.find_one({'username': uname, 'role': 'admin'})
+        if user and check_password_hash(user['password'], pwd):
+            session.clear()
+            session['user'] = uname
+            session['role'] = 'admin'
+            return redirect(url_for('admin_dashboard'))
+        flash('Invalid admin credentials','danger')
+    return render_template('admin_login.html')
+
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
 
-@app.route('/role_select', methods=['GET','POST'])
+@app.route('/admin_logout')
+def admin_logout():
+    session.clear()
+    return redirect(url_for('admin_login'))
+
+# ========== ADMIN ROUTES ==========
+@app.route('/admin_dashboard', methods=['GET','POST'])
+@login_required(role='admin')
+def admin_dashboard():
+    if request.method=='POST':
+        if 'create_op' in request.form:
+            op = request.form['new_op'].strip()
+            pw = request.form['new_pw']
+            if users_col.find_one({'username': op}):
+                flash('Operator exists','warning')
+            else:
+                users_col.insert_one({'username': op,'password': generate_password_hash(pw),'role':'operator'})
+                flash('Operator created','success')
+        if 'alloc_submit' in request.form:
+            op   = request.form['op_select']
+            role = request.form['role_select']
+            date = request.form['date']
+            tasks = [{"task": t.strip(), "done": False} for t in request.form['tasks_raw'].splitlines() if t.strip()]
+            tasks_col.update_one({'operator':op,'role':role,'date':date},{'$set':{'tasks':tasks}},upsert=True)
+            flash('Tasks assigned','success')
+    users = list(users_col.find({'role':'operator'},{'password':0}))
+    tasks = list(tasks_col.find({},{'_id':0}))
+    logs  = list(logs_col.find({},{'_id':0}))
+    return render_template('admin_dashboard.html', users=users, tasks=tasks, logs=logs)
+
+# ========== OPERATOR ROUTES ==========
+@app.route('/select_role', methods=['GET','POST'])
 @login_required(role='operator')
 def select_role():
     if request.method=='POST':
@@ -156,77 +140,98 @@ def select_role():
 @app.route('/dashboard', methods=['GET','POST'])
 @login_required(role='operator')
 def task_dashboard():
-    op   = session['user']
-    role = session['role_sel']
-    date = datetime.today().strftime('%Y-%m-%d')
-
-    doc  = tasks_col.find_one({'operator':op,'role':role,'date':date})
-    tlist = doc['tasks'] if doc else []
-
+    op = session['user']; role = session['role_sel']; date = datetime.today().strftime('%Y-%m-%d')
+    doc = tasks_col.find_one({'operator':op,'role':role,'date':date})
+    tasks = doc['tasks'] if doc else []
+    print(tasks)
     if request.method=='POST':
-        updated_tasks = []
-        for i, task in enumerate(tlist):
-            if f'done_{i}' in request.form:
-                task['done'] = not task['done']
-            if f'del_{i}' in request.form:
-                continue  # Skip task to delete
-            updated_tasks.append(task)
-
-        tasks_col.update_one(
-            {'operator': op, 'role': role, 'date': date},
-            {'$set': {'tasks': updated_tasks}}
-        )
+        updated = []
+        for i,task in enumerate(tasks):
+            if request.form.get(f'done_{i}'):
+                task['done'] = True
+            if not request.form.get(f'del_{i}'):
+                updated.append(task)
+        tasks_col.update_one({'operator':op,'role':role,'date':date},{'$set':{'tasks':updated}})
         return redirect(url_for('task_dashboard'))
-
-    return render_template('task_dashboard.html',
-                           tasks=tlist, op=op,
-                           role=role, machine=session['machine'],
-                           date=date)
+    return render_template('task_dashboard.html', tasks=tasks, op=op, role=role, machine=session['machine'], date=date)
 
 @app.route('/performance')
 @login_required(role='operator')
 def performance():
-    op   = session['user']
-    logs = list(logs_col.find({'operator':op}, {'_id':0}))
-    dates     = [l['date'] for l in logs]
-    idle_vals = [l.get('idle_time',0) for l in logs]
-    fuel_vals = [l.get('fuel',0) for l in logs]
-    return render_template('performance.html',
-                           dates=dates, idle_times=idle_vals, fuel_used=fuel_vals)
+    op = session['user']
+    logs = list(logs_col.find({'operator':op},{'_id':0}))
+    dates = [l['date'] for l in logs]
+    idle  = [l.get('idle_time',0) for l in logs]
+    fuel  = [l.get('fuel',0) for l in logs]
+    return render_template('performance.html', dates=dates, idle_times=idle, fuel_used=fuel)
 
 @app.route('/forum')
 @login_required(role='operator')
 def forum():
-    posts = list(forum_col.find({}, {'_id': 0}))
-    posts.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
-    return render_template('forum.html', posts=posts, username=session['user'])
+    posts = list(forum_col.find({},{'_id':0}))
+    posts.sort(key=lambda x: x.get('timestamp',0), reverse=True)
+    return render_template('forum.html', posts=posts)
 
 @app.route('/add_post', methods=['POST'])
 @login_required(role='operator')
 def add_post():
     data = request.get_json()
-    title = data.get('title')
-    content = data.get('content')
-    timestamp = int(datetime.utcnow().timestamp() * 1000)
-    forum_col.insert_one({
-        'title': title,
-        'content': content,
-        'author': session['user'],
-        'timestamp': timestamp
-    })
-    return jsonify({'message': 'Post added'})
+    ts = int(datetime.utcnow().timestamp()*1000)
+    forum_col.insert_one({'title':data['title'],'content':data['content'],'author':session['user'],'timestamp':ts,'likes':0})
+    return jsonify({'ok':True})
 
 @app.route('/translate', methods=['POST'])
 @login_required(role='operator')
 def translate():
     data = request.get_json()
-    text = data.get('text')
-    target = data.get('target_lang')
     try:
-        translated = GoogleTranslator(source='auto', target=target).translate(text)
-        return jsonify({'translatedContent': translated})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        trans = GoogleTranslator(source='auto',target=data['target_lang']).translate(data['text'])
+        return jsonify({'translatedContent':trans})
+    except:
+        return jsonify({'translatedContent':data['text']})
 
-if __name__ == '__main__':
+@app.route('/predict_time', methods=['GET','POST'])
+@login_required(role='operator')
+def predict_time():
+    prediction = None
+    if request.method=='POST':
+        form = request.form
+        m = encoders['Machine_Type'].transform([form['machine']])[0]
+        t = encoders['Task_Type'].transform([form['task']])[0]
+        s = encoders['Soil_Type'].transform([form['soil']])[0]
+        features = [[m,t,s,
+                     float(form['distance']), float(form['weight']), int(form['experience']),
+                     float(form['temperature']), int(form['is_rainy']),
+                     float(form['engine_hours']), float(form['fuel_consumed']),
+                     int(form['load_cycles']), float(form['idling_time'])]]
+        pt = model.predict(features)[0]
+        prediction = f"{pt:.2f} minutes"
+    return render_template('predict_time.html', prediction=prediction)
+
+@app.route('/get_weather')
+@login_required(role='operator')
+def get_weather():
+    city = request.args.get('city')
+    key = os.getenv('OPENWEATHER_API')
+    if not city or not key:
+        return jsonify({'error':'City or API key missing'})
+    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={key}&units=metric"
+    r = requests.get(url)
+    if r.status_code!=200:
+        return jsonify({'error':'Weather fetch failed'})
+    d = r.json()
+    cond = d['weather'][0]['main'].lower()
+    return jsonify({
+        'city':d['name'], 'condition':cond,
+        'description':d['weather'][0]['description'],
+        'temperature':d['main']['temp'], 'humidity':d['main']['humidity'],
+        'is_rainy':1 if 'rain' in cond else 0
+    })
+
+@app.route('/track_task/<task_name>')
+@login_required(role='operator')
+def track_task(task_name):
+    return render_template('track_task.html', task=task_name)
+
+if __name__=='__main__':
     app.run(debug=True)

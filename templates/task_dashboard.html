@@ -1,23 +1,34 @@
 {% extends 'layout.html' %}
 {% block content %}
-<div class="container">
-  <h2>Today's Tasks</h2>
-  <p><strong>Operator:</strong> {{ op }}</p>
-  <p><strong>Role:</strong> {{ role }}</p>
-  <p><strong>Machine:</strong> {{ machine }}</p>
-  <p><strong>Date:</strong> {{ date }}</p>
+<div class="container mt-4">
+  <h2 class="text-primary">Today's Tasks</h2>
+  <div class="mb-3">
+    <p><strong>Operator:</strong> {{ op }}</p>
+    <p><strong>Role:</strong> {{ role }}</p>
+    <p><strong>Machine:</strong> {{ machine }}</p>
+    <p><strong>Date:</strong> {{ date }}</p>
+  </div>
 
   <form method="POST">
-    {% for task in tasks %}
-      <div class="post">
-        <input type="checkbox" name="done_{{ loop.index0 }}" {% if task.done %}checked{% endif %}> {{ task.task }}
-        <button name="del_{{ loop.index0 }}" value="1">🗑️</button>
-      </div>
-    {% endfor %}
-    <button type="submit">Save Changes</button>
-  </form>
+    <div class="list-group">
+      {% for task in tasks %}
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <input type="checkbox" name="done_{{ loop.index0 }}" {% if task.done %}checked{% endif %}>
+            <span class="ms-2">{{ task.task }}</span>
+          </div>
+          <div class="btn-group">
+            <a href="{{ url_for('track_task', task_name=task.task) }}" class="btn btn-sm btn-outline-primary">Track Task</a>
+            <button type="submit" name="del_{{ loop.index0 }}" value="1" class="btn btn-sm btn-outline-danger">🗑️</button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
 
-  <a href="{{ url_for('performance') }}">View My Performance</a> 
+    <div class="mt-4">
+      <button type="submit" class="btn btn-success">Save Changes</button>
+      <a href="{{ url_for('performance') }}" class="btn btn-secondary ms-2">View My Performance</a>
+    </div>
+  </form>
 </div>
 {% endblock %}
-

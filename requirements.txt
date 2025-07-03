@@ -3,3 +3,7 @@ flask-pymongo
 python-dotenv
 werkzeug
 deep-translator
+requests
+joblib
+pandas
+scikit-learn==1.4.2

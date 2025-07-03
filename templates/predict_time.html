@@ -1,0 +1,85 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h2>🛠️ Excavator Task Time Predictor</h2>
+<form method="POST" class="mb-4">
+  <div class="row g-3">
+    <div class="col-md-4">
+      <label>Machine Type</label>
+      <select name="machine" class="form-select">
+        <option>Excavator</option>
+        <option>Loader</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label>Task Type</label>
+      <select name="task" class="form-select">
+        <option>Digging</option>
+        <option>Trenching</option>
+        <option>Loading</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label>Soil Type</label>
+      <select name="soil" class="form-select">
+        <option>Sandy</option>
+        <option>Clay</option>
+        <option>Gravel</option>
+        <option>Rocky</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-2">
+    <div class="col-md-4">
+      <label>Distance to Dump (m)</label>
+      <input type="number" step="0.1" name="distance" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label>Load Weight (tons)</label>
+      <input type="number" step="0.1" name="weight" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label>Experience (years)</label>
+      <input type="number" name="experience" class="form-control" required>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-2">
+    <div class="col-md-4">
+      <label>Temperature (°C)</label>
+      <input type="number" step="0.1" name="temperature" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label>Rainy (1=Yes,0=No)</label>
+      <input type="number" min="0" max="1" name="is_rainy" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label>Engine Hours</label>
+      <input type="number" step="0.1" name="engine_hours" class="form-control" required>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-2">
+    <div class="col-md-4">
+      <label>Fuel (L)</label>
+      <input type="number" step="0.1" name="fuel_consumed" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label>Load Cycles</label>
+      <input type="number" name="load_cycles" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label>Idling (min)</label>
+      <input type="number" step="0.1" name="idling_time" class="form-control" required>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-success mt-4">Predict Time</button>
+</form>
+
+{% if prediction %}
+  <div class="alert alert-info">
+    <h5>⏱️ Predicted Time: {{ prediction }}</h5>
+  </div>
+{% endif %}
+{% endblock %}
