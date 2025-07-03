@@ -1,49 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Admin Dashboard</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-  <div class="container">
-    <h2>Admin Dashboard</h2>
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container">
+  <h2>Admin Dashboard</h2>
 
-    <h3>Create Operator</h3>
-    <form method="POST">
-      <input type="hidden" name="create_op">
-      <input type="text" name="new_op" placeholder="New Operator Username" required />
-      <input type="password" name="new_pw" placeholder="Password" required />
-      <button type="submit">Create</button>
-    </form>
+  <h3>Create Operator</h3>
+  <form method="POST">
+    <input type="hidden" name="create_op">
+    <input type="text" name="new_op" placeholder="New Operator Username" required />
+    <input type="password" name="new_pw" placeholder="Password" required />
+    <button type="submit">Create</button>
+  </form>
 
-    <h3>Assign Tasks</h3>
-    <form method="POST">
-      <input type="hidden" name="alloc_submit">
-      <label>Select Operator:</label>
-      <select name="op_select" required>
-        {% for user in users %}
-          <option value="{{ user.username }}">{{ user.username }}</option>
-        {% endfor %}
-      </select>
+  <h3>Assign Tasks</h3>
+  <form method="POST">
+    <input type="hidden" name="alloc_submit">
+    <label>Select Operator:</label>
+    <select name="op_select" required>
+      {% for user in users %}
+        <option value="{{ user.username }}">{{ user.username }}</option>
+      {% endfor %}
+    </select>
 
-      <label>Role:</label>
-      <select name="role_select" required>
-        <option value="excavator">Excavator</option>
-        <option value="loader">Loader</option>
-      </select>
+    <label>Role:</label>
+    <select name="role_select" required>
+      <option value="excavator">Excavator</option>
+      <option value="loader">Loader</option>
+    </select>
 
-      <label>Date:</label>
-      <input type="date" name="date" required />
+    <label>Date:</label>
+    <input type="date" name="date" required />
 
-      <label>Tasks (one per line):</label>
-      <textarea name="tasks_raw" rows="5" placeholder="Task 1&#10;Task 2" required></textarea>
+    <label>Tasks (one per line):</label>
+    <textarea name="tasks_raw" rows="5" placeholder="Task 1&#10;Task 2" required></textarea>
 
-      <button type="submit">Assign Tasks</button>
-    </form>
+    <button type="submit">Assign Tasks</button>
+  </form>
+</div>
+{% endblock %}
 
-    <a href="{{ url_for('change_password') }}">Change Password</a> |
-    <a href="{{ url_for('admin_logout') }}">Logout</a>
-  </div>
-</body>
-</html>

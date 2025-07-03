@@ -1,23 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Select Role & Machine</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-  <div class="container">
-    <h2>Select Role & Machine</h2>
-    <form method="POST">
-      <label>Role:</label>
-      <select name="role" required>
-        <option value="excavator">Excavator</option>
-        <option value="loader">Loader</option>
-      </select>
-      <label>Machine ID:</label>
-      <input type="text" name="machine" placeholder="e.g., MCH-201" required />
-      <button type="submit">Continue</button>
-    </form>
-  </div>
-</body>
-</html>
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container">
+  <h2>Select Role & Machine</h2>
+  <form method="POST">
+    <label>Role:</label>
+    <select name="role" required>
+      <option value="excavator">Excavator</option>
+      <option value="loader">Loader</option>
+    </select>
+    <label>Machine ID:</label>
+    <input type="text" name="machine" placeholder="e.g., MCH-201" required />
+    <button type="submit">Continue</button>
+  </form>
+</div>
+{% endblock %}
+
