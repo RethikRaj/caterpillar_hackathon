@@ -25,6 +25,7 @@ users_col    = mongo.db.users
 tasks_col    = mongo.db.tasks
 logs_col     = mongo.db.logs
 forum_col    = mongo.db.forum_posts
+safety_logs_col = mongo.db.safety_logs
 
 # Load ML models
 with open("model.pkl", "rb") as f:
@@ -281,6 +282,13 @@ def real_time_safety():
         le = joblib.load("label_encoder_single.pkl")
         pred = clf.predict(input_df)
         prediction = le.inverse_transform(pred)[0]
+
+        safety_logs_col.insert_one({
+            "operator": session.get("user"),
+            "timestamp": datetime.utcnow(),
+            "input_data": data,
+            "prediction": prediction
+        })
 
     return render_template("real_time_safety.html", prediction=prediction)
 
