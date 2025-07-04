@@ -201,18 +201,18 @@
     attachListeners("operator-checks-item");
 
     document.getElementById("startBtn").addEventListener("click", () => {
-      alert("✅ All safety checks complete. Machine ready to start!");
+      window.location.href = "/real_time_safety";
     });
 
     document.getElementById("forceBtn").addEventListener("click", () => {
       const uncheckedMachine = getUncheckedLabels("machine-checks-item");
-      const uncheckedOperator = getUncheckedLabels("operator-checks-item");
+        const uncheckedOperator = getUncheckedLabels("operator-checks-item");
 
-      if (uncheckedMachine.length === 0 && uncheckedOperator.length === 0) {
-        alert("All items are checked. No need for Force Start.");
-      } else {
-        generateUploadFields(uncheckedMachine, uncheckedOperator);
-      }
+        if (uncheckedMachine.length === 0 && uncheckedOperator.length === 0) {
+            window.location.href = "/real_time_safety";  // ✅ redirect
+        } else {
+            generateUploadFields(uncheckedMachine, uncheckedOperator);
+        }
     });
   </script>
 </body>

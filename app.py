@@ -20,24 +20,20 @@ app.config["MONGO_URI"] = os.getenv("MONGO_URI")
 if not app.config["MONGO_URI"]:
     raise ValueError("MONGO_URI not set or .env file not found!")
 
-# Initialize MongoDB
 mongo = PyMongo(app)
 users_col    = mongo.db.users
 tasks_col    = mongo.db.tasks
 logs_col     = mongo.db.logs
 forum_col    = mongo.db.forum_posts
 
-# Load ML model and encoders for task time prediction
-# model = joblib.load('model.pkl')
-# encoders = joblib.load('label_encoders.pkl')
-
+# Load ML models
 with open("model.pkl", "rb") as f:
     model = pickle.load(f)
 
 with open("label_encoders.pkl", "rb") as f:
     label_encoders = pickle.load(f)
 
-# Ensure default admin exists
+# Ensure default admin
 if not users_col.find_one({'username': 'admin'}):
     users_col.insert_one({
         'username': 'admin',
@@ -47,7 +43,6 @@ if not users_col.find_one({'username': 'admin'}):
 
 from functools import wraps
 
-# Authentication decorator
 def login_required(role=None):
     def wrapper(fn):
         @wraps(fn)
@@ -60,17 +55,15 @@ def login_required(role=None):
         return decorated_view
     return wrapper
 
-# Jinja filter for timestamps
 def datetimeformat(value):
     return datetime.fromtimestamp(int(value)/1000).strftime('%Y-%m-%d %H:%M:%S')
 app.jinja_env.filters['datetimeformat'] = datetimeformat
 
-# Context processor for navbar
 @app.context_processor
 def inject_user():
     return dict(current_user=session.get('user'), current_role=session.get('role'))
 
-# ========== AUTH ROUTES ==========
+# === AUTH ROUTES ===
 @app.route('/', methods=['GET','POST'])
 def login():
     if request.method=='POST':
@@ -109,7 +102,7 @@ def admin_logout():
     session.clear()
     return redirect(url_for('admin_login'))
 
-# ========== ADMIN ROUTES ==========
+# === ADMIN DASHBOARD ===
 @app.route('/admin_dashboard', methods=['GET','POST'])
 @login_required(role='admin')
 def admin_dashboard():
@@ -134,7 +127,7 @@ def admin_dashboard():
     logs  = list(logs_col.find({},{'_id':0}))
     return render_template('admin_dashboard.html', users=users, tasks=tasks, logs=logs)
 
-# ========== OPERATOR ROUTES ==========
+# === OPERATOR ROUTES ===
 @app.route('/select_role', methods=['GET','POST'])
 @login_required(role='operator')
 def select_role():
@@ -147,10 +140,11 @@ def select_role():
 @app.route('/dashboard', methods=['GET','POST'])
 @login_required(role='operator')
 def task_dashboard():
-    op = session['user']; role = session['role_sel']; date = datetime.today().strftime('%Y-%m-%d')
+    op = session['user']
+    role = session['role_sel']
+    date = datetime.today().strftime('%Y-%m-%d')
     doc = tasks_col.find_one({'operator':op,'role':role,'date':date})
     tasks = doc['tasks'] if doc else []
-    print(tasks)
     if request.method=='POST':
         updated = []
         for i,task in enumerate(tasks):
@@ -197,56 +191,11 @@ def translate():
     except:
         return jsonify({'translatedContent':data['text']})
 
-# @app.route('/predict_time', methods=['GET','POST'])
-# @login_required(role='operator')
-# def predict_time():
-#     prediction = None
-#     if request.method=='POST':
-#         form = request.form
-#         m = encoders['Machine_Type'].transform([form['machine']])[0]
-#         t = encoders['Task_Type'].transform([form['task']])[0]
-#         s = encoders['Soil_Type'].transform([form['soil']])[0]
-#         features = [[m,t,s,
-#                      float(form['distance']), float(form['weight']), int(form['experience']),
-#                      float(form['temperature']), int(form['is_rainy']),
-#                      float(form['engine_hours']), float(form['fuel_consumed']),
-#                      int(form['load_cycles']), float(form['idling_time'])]]
-#         pt = model.predict(features)[0]
-#         prediction = f"{pt:.2f} minutes"
-#     return render_template('predict_time.html', prediction=prediction)
-
-# @app.route('/get_weather')
-# @login_required(role='operator')
-# def get_weather():
-#     city = request.args.get('city')
-#     key = os.getenv('OPENWEATHER_API')
-#     if not city or not key:
-#         return jsonify({'error':'City or API key missing'})
-#     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={key}&units=metric"
-#     r = requests.get(url)
-#     if r.status_code!=200:
-#         return jsonify({'error':'Weather fetch failed'})
-#     d = r.json()
-#     cond = d['weather'][0]['main'].lower()
-#     return jsonify({
-#         'city':d['name'], 'condition':cond,
-#         'description':d['weather'][0]['description'],
-#         'temperature':d['main']['temp'], 'humidity':d['main']['humidity'],
-#         'is_rainy':1 if 'rain' in cond else 0
-#     })
-
-# @app.route('/track_task/<task_name>',methods=['GET', 'POST'])
-# @login_required(role='operator')
-# def track_task(task_name):
-#     return render_template('track_task.html', task=task_name)
-
 @app.route('/track_task/<task_name>', methods=['GET', 'POST'])
 @login_required(role='operator')
 def track_task(task_name):
     prediction = None
-
     if request.method == 'POST':
-        # Get form data
         machine = request.form['machine']
         task = request.form['task']
         soil = request.form['soil']
@@ -260,18 +209,15 @@ def track_task(task_name):
         load_cycles = int(request.form['load_cycles'])
         idling_time = float(request.form['idling_time'])
 
-        # Encode categorical values
         machine_enc = label_encoders['Machine_Type'].transform([machine])[0]
         task_enc = label_encoders['Task_Type'].transform([task])[0]
         soil_enc = label_encoders['Soil_Type'].transform([soil])[0]
 
-        # Feature vector
         features = [[
             machine_enc, task_enc, soil_enc, distance, weight, experience,
             temperature, is_rainy, engine_hours, fuel_consumed, load_cycles, idling_time
         ]]
 
-        # Predict
         predicted_time = model.predict(features)[0]
         prediction = f"{predicted_time:.2f} minutes"
 
@@ -283,7 +229,7 @@ def get_weather():
     if not city:
         return jsonify({'error': 'City not provided'}), 400
 
-    api_key = "4770a89d38d26ba4df1200be94fdf32e"  # Replace with your actual OpenWeatherMap API key
+    api_key = "4770a89d38d26ba4df1200be94fdf32e"
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
 
     try:
@@ -314,5 +260,29 @@ def get_weather():
 def safety_check():
     return render_template('safety_check.html')
 
-if __name__=='__main__':
+# ✅ NEW: Real-Time Safety Prediction Page
+@app.route('/real_time_safety', methods=['GET', 'POST'])
+@login_required(role='operator')
+def real_time_safety():
+    prediction = None
+    if request.method == "POST":
+        data = {
+            'proximity_distance': float(request.form['proximity_distance']),
+            'tilt_angle': float(request.form['tilt_angle']),
+            'engine_temp': float(request.form['engine_temp']),
+            'idling_time': float(request.form['idling_time']),
+            'machine_speed': float(request.form['machine_speed']),
+            'load_percent': float(request.form['load_percent']),
+            'rain_detected': int(request.form['rain_detected'])
+        }
+        input_df = pd.DataFrame([data])
+
+        clf = joblib.load("incident_model_single.pkl")
+        le = joblib.load("label_encoder_single.pkl")
+        pred = clf.predict(input_df)
+        prediction = le.inverse_transform(pred)[0]
+
+    return render_template("real_time_safety.html", prediction=prediction)
+
+if __name__ == '__main__':
     app.run(debug=True)
