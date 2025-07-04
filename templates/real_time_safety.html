@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Real-Time Safety Monitor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #111;
+      color: #fff;
+      line-height: 1.5;
+    }
+
+    .main-header {
+      background-color: #000;
+      color: #ffcc00;
+      text-align: center;
+      padding: 20px 10px;
+      border-bottom: 3px solid #ffcc00;
+    }
+
+    .main-header h1 {
+      font-size: 26px;
+      margin-bottom: 5px;
+    }
+
+    .main-header p {
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    .form-container {
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #222;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+    }
+
+    .form-card {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #ffcc00;
+    }
+
+    input {
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #555;
+      border-radius: 6px;
+      background-color: #333;
+      color: #fff;
+    }
+
+    button {
+      margin-top: 25px;
+      padding: 12px;
+      background-color: #ffcc00;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #e6b800;
+    }
+
+    .weather-box {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #333;
+      border-radius: 6px;
+    }
+
+    .result-box {
+      margin-top: 30px;
+      background-color: #333;
+      padding: 20px;
+      border-radius: 10px;
+      border-left: 5px solid #ffcc00;
+    }
+
+    .prediction-text {
+      font-size: 20px;
+      font-weight: bold;
+      color: #ffcc00;
+    }
+  </style>
+</head>
+<body>
+  <header class="main-header">
+    <h1>Smart Safety Monitor 🛠️</h1>
+    <p><b>Stay ahead of danger with real-time safety insights</b></p>
+  </header>
+
+  <div class="form-container">
+    <form method="POST" class="form-card">
+      <label>Proximity Distance</label>
+      <input type="number" step="0.01" name="proximity_distance" required />
+
+      <label>Tilt Angle</label>
+      <input type="number" step="0.01" name="tilt_angle" required />
+
+      <label>Engine Temperature (°C)</label>
+      <input type="number" step="0.1" name="engine_temp" required />
+
+      <label>Idling Time (s)</label>
+      <input type="number" step="1" name="idling_time" required />
+
+      <label>Machine Speed</label>
+      <input type="number" step="0.1" name="machine_speed" required />
+
+      <label>Load Percent (%)</label>
+      <input type="number" step="0.1" name="load_percent" required />
+
+      <div class="weather-box">
+        <h3 style="margin-bottom: 5px;">🌦️ Auto-Fill Rain Based on City</h3>
+        <input type="text" id="cityInput" placeholder="Enter City" />
+        <button type="button" onclick="getWeather()">🌧️ Auto Fill Rain</button>
+        <div id="weatherResult" style="margin-top:10px;"></div>
+      </div>
+
+      <label>Rain Detected (1 = Yes, 0 = No)</label>
+      <input type="number" min="0" max="1" name="rain_detected" id="rain_detected" required />
+
+      <button type="submit">🔍 Predict</button>
+    </form>
+
+    {% if prediction %}
+      <div class="result-box">
+        <h2>Prediction:</h2>
+        <p class="prediction-text">{{ prediction }}</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <script>
+    function getWeather() {
+      const city = document.getElementById("cityInput").value;
+      if (!city) {
+        alert("Please enter a city name.");
+        return;
+      }
+
+      fetch(`/get_weather?city=${city}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            document.getElementById("weatherResult").innerHTML = `<p style="color:red;">${data.error}</p>`;
+          } else {
+            document.getElementById("rain_detected").value = data.is_rainy;
+            document.getElementById("weatherResult").innerHTML =
+              `<p><strong>Rain Detected:</strong> ${data.is_rainy === 1 ? "Yes" : "No"}</p>`;
+          }
+        })
+        .catch(err => {
+          document.getElementById("weatherResult").innerHTML = `<p style="color:red;">Weather data fetch failed</p>`;
+        });
+    }
+  </script>
+</body>
+</html>

@@ -102,8 +102,10 @@
             </div>
           </div>
 
-          <div class="d-grid">
+          <div class="d-grid gap-2">
             <button type="submit" class="btn btn-success">Predict Time</button>
+            <a href="{{ url_for('safety_check') }}" class="btn btn-warning">Skip to Safety Check</a>
+            <a href="{{ url_for('safety_check') }}" class="btn btn-primary">Go to Safety Check</a>
           </div>
 
           {% if prediction %}
@@ -127,7 +129,7 @@
       </div>
     </div>
   </div>
-
+  
   <script>
     function getWeather() {
       const city = document.getElementById("cityInput").value;

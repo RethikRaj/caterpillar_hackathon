@@ -309,5 +309,10 @@ def get_weather():
     except requests.exceptions.RequestException:
         return jsonify({'error': 'Failed to fetch weather data'}), 500
 
+@app.route('/safety_check')
+@login_required(role='operator')
+def safety_check():
+    return render_template('safety_check.html')
+
 if __name__=='__main__':
     app.run(debug=True)

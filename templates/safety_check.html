@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Essential Excavator & Loader Safety Checks</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f8fc;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #004080;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    main {
+      padding: 30px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    h2, h3, h4 {
+      color: #003366;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    li {
+      background: #ffffff;
+      margin-bottom: 10px;
+      padding: 12px 16px;
+      border-left: 6px solid #0066cc;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    label {
+      margin-left: 10px;
+    }
+
+    .button-group {
+      margin-top: 20px;
+    }
+
+    button {
+      margin-right: 10px;
+      padding: 12px 24px;
+      font-size: 16px;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    #uploadContainer {
+      margin-top: 30px;
+      background: #eef4fa;
+      padding: 20px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Essential Safety Checklist</h1>
+  </header>
+
+  <main>
+    <section>
+      <h2>🛠️ Critical Machine Checks</h2>
+      <ul id="machine-checks" class="checklist"></ul>
+    </section>
+
+    <section>
+      <h2>👷 Essential Operator Readiness</h2>
+      <ul id="operator-checks" class="checklist"></ul>
+    </section>
+
+    <div class="button-group">
+      <button id="startBtn" disabled>Start Machine</button>
+      <button id="forceBtn" style="display:none;">Force Start</button>
+    </div>
+
+    <div id="uploadContainer"></div>
+  </main>
+
+  <script>
+    const machineChecks = [
+      "Check for leaks (oil, fuel, coolant, hydraulic)",
+      "Inspect tires (loader) or tracks (excavator)",
+      "Check fluid levels: engine oil, coolant, hydraulic, brake, fuel",
+      "Inspect boom/stick/bucket (excavator) or loader arms (loader)",
+      "Test brakes and steering (especially loaders)"
+    ];
+
+    const operatorChecks = [
+      "Wear proper PPE: helmet, boots, vest, gloves, glasses, ear protection",
+      "Check cabin cleanliness",
+      "Wear your seatbelt",
+      "Ensure two-way radio is working",
+      "Know emergency stop and site procedures",
+      "Start engine, listen for abnormal sounds, test controls slowly"
+    ];
+
+    function createChecklist(containerId, items) {
+      const container = document.getElementById(containerId);
+      items.forEach((text, index) => {
+        const li = document.createElement("li");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = `${containerId}-check-${index}`;
+        checkbox.className = containerId + "-item";
+        const label = document.createElement("label");
+        label.htmlFor = checkbox.id;
+        label.textContent = text;
+        li.appendChild(checkbox);
+        li.appendChild(label);
+        container.appendChild(li);
+      });
+    }
+
+    function checkAllChecked(className) {
+      const checkboxes = document.querySelectorAll(`.${className}`);
+      return Array.from(checkboxes).every(cb => cb.checked);
+    }
+
+    function getUncheckedLabels(className) {
+      const checkboxes = document.querySelectorAll(`.${className}`);
+      return Array.from(checkboxes)
+        .filter(cb => !cb.checked)
+        .map(cb => cb.nextSibling.textContent);
+    }
+
+    function updateButtonState() {
+      const machineComplete = checkAllChecked("machine-checks-item");
+      const operatorComplete = checkAllChecked("operator-checks-item");
+
+      const startBtn = document.getElementById("startBtn");
+      const forceBtn = document.getElementById("forceBtn");
+
+      if (machineComplete && operatorComplete) {
+        startBtn.disabled = false;
+        forceBtn.style.display = "none";
+      } else {
+        startBtn.disabled = true;
+        forceBtn.style.display = "inline-block";
+      }
+
+      document.getElementById("uploadContainer").innerHTML = "";
+    }
+
+    function attachListeners(className) {
+      const checkboxes = document.querySelectorAll(`.${className}`);
+      checkboxes.forEach(cb => cb.addEventListener("change", updateButtonState));
+    }
+
+    function generateUploadFields(uncheckedMachine, uncheckedOperator) {
+      const container = document.getElementById("uploadContainer");
+      container.innerHTML = "<h3>📤 Upload images for unchecked items:</h3>";
+
+      const createSection = (title, items, prefix) => {
+        if (items.length === 0) return;
+        const section = document.createElement("div");
+        section.innerHTML = `<h4>${title}</h4>`;
+        items.forEach((item, idx) => {
+          const div = document.createElement("div");
+          div.innerHTML = `
+            <label>${item}</label><br>
+            <input type="file" accept="image/*" name="${prefix}_${idx}" required><br><br>
+          `;
+          section.appendChild(div);
+        });
+        container.appendChild(section);
+      };
+
+      createSection("Machine Items", uncheckedMachine, "machine");
+      createSection("Operator Items", uncheckedOperator, "operator");
+
+      const submitBtn = document.createElement("button");
+      submitBtn.textContent = "Submit & Force Start";
+      submitBtn.onclick = () => alert("🚨 Force Start submitted with images!");
+      container.appendChild(submitBtn);
+    }
+
+    createChecklist("machine-checks", machineChecks);
+    createChecklist("operator-checks", operatorChecks);
+    attachListeners("machine-checks-item");
+    attachListeners("operator-checks-item");
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      alert("✅ All safety checks complete. Machine ready to start!");
+    });
+
+    document.getElementById("forceBtn").addEventListener("click", () => {
+      const uncheckedMachine = getUncheckedLabels("machine-checks-item");
+      const uncheckedOperator = getUncheckedLabels("operator-checks-item");
+
+      if (uncheckedMachine.length === 0 && uncheckedOperator.length === 0) {
+        alert("All items are checked. No need for Force Start.");
+      } else {
+        generateUploadFields(uncheckedMachine, uncheckedOperator);
+      }
+    });
+  </script>
+</body>
+</html>
