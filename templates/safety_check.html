@@ -6,16 +6,18 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f2f8fc;
+      background-color: #000;
+      color: #fff;
       margin: 0;
       padding: 0;
     }
 
     header {
-      background-color: #004080;
-      color: white;
+      background-color: #111;
+      color: #ffcc00;
       padding: 20px;
       text-align: center;
+      border-bottom: 2px solid #ffcc00;
     }
 
     main {
@@ -25,7 +27,7 @@
     }
 
     h2, h3, h4 {
-      color: #003366;
+      color: #ffcc00;
     }
 
     ul {
@@ -34,11 +36,12 @@
     }
 
     li {
-      background: #ffffff;
+      background: #1a1a1a;
+      color: #fff;
       margin-bottom: 10px;
       padding: 12px 16px;
-      border-left: 6px solid #0066cc;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border-left: 6px solid #ffcc00;
+      box-shadow: 0 1px 4px rgba(255, 204, 0, 0.2);
     }
 
     label {
@@ -53,27 +56,57 @@
       margin-right: 10px;
       padding: 12px 24px;
       font-size: 16px;
-      background-color: #0077cc;
-      color: white;
+      background-color: #ffcc00;
+      color: #000;
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      font-weight: bold;
     }
 
     button:disabled {
-      background-color: #cccccc;
+      background-color: #555;
+      color: #999;
       cursor: not-allowed;
     }
 
     #uploadContainer {
       margin-top: 30px;
-      background: #eef4fa;
+      background: #1a1a1a;
       padding: 20px;
       border-radius: 8px;
+      color: white;
+      border: 1px solid #444;
+    }
+
+    input[type="file"] {
+      background-color: #333;
+      color: white;
+      border: 1px solid #666;
+      border-radius: 4px;
+      padding: 5px;
+    }
+
+    input[type="file"]::file-selector-button {
+      background-color: #ffcc00;
+      color: black;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] {
+      transform: scale(1.2);
+      margin-right: 6px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
+
+  {% include 'navbar_operator.html' %}
+
   <header>
     <h1>Essential Safety Checklist</h1>
   </header>
@@ -191,7 +224,10 @@
 
       const submitBtn = document.createElement("button");
       submitBtn.textContent = "Submit & Force Start";
-      submitBtn.onclick = () => alert("🚨 Force Start submitted with images!");
+      submitBtn.onclick = () => {
+        alert("🚨 Force Start submitted with images!");
+        window.location.href = "/real_time_safety";
+      };
       container.appendChild(submitBtn);
     }
 
@@ -206,13 +242,13 @@
 
     document.getElementById("forceBtn").addEventListener("click", () => {
       const uncheckedMachine = getUncheckedLabels("machine-checks-item");
-        const uncheckedOperator = getUncheckedLabels("operator-checks-item");
+      const uncheckedOperator = getUncheckedLabels("operator-checks-item");
 
-        if (uncheckedMachine.length === 0 && uncheckedOperator.length === 0) {
-            window.location.href = "/real_time_safety";  // ✅ redirect
-        } else {
-            generateUploadFields(uncheckedMachine, uncheckedOperator);
-        }
+      if (uncheckedMachine.length === 0 && uncheckedOperator.length === 0) {
+        window.location.href = "/real_time_safety";
+      } else {
+        generateUploadFields(uncheckedMachine, uncheckedOperator);
+      }
     });
   </script>
 </body>

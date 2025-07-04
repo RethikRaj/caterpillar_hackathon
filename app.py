@@ -292,5 +292,39 @@ def real_time_safety():
 
     return render_template("real_time_safety.html", prediction=prediction)
 
+
+@app.route('/training_hub')
+@login_required(role='operator')
+def training_hub():
+    return render_template('training_hub.html')
+
+@app.route('/evideo')
+@login_required(role='operator')
+def evideo():
+    return render_template('evideo.html')
+
+@app.route('/instructor')
+@login_required(role='operator')
+def instructor():
+    return render_template('instructor.html')
+
+@app.route('/gamesmain')
+@login_required(role='operator')
+def gamesmain():
+    return render_template('gamesmain.html')
+
+@app.route("/game/loader")
+@login_required(role='operator')
+def game_loader():
+    return render_template("loader.html")
+
+
+@app.route("/game/excavator")
+@login_required(role='operator')
+def game_excavator():
+    return render_template("excavation.html")
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)

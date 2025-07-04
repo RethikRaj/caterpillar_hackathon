@@ -1,0 +1,24 @@
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #000; border-bottom: 2px solid #ffcc00;">
+  <div class="container-fluid">
+    <a class="navbar-brand text-warning fw-bold" href="#">COMPANY NAME</a>
+
+    <button class="navbar-toggler border-warning" type="button" data-bs-toggle="collapse" data-bs-target="#navbarOperator" aria-controls="navbarOperator" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon" style="filter: brightness(150%);"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarOperator">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link text-warning" href="{{ url_for('training_hub') }}">Training Hub</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-warning" href="{{ url_for('forum') }}">Community Forum</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-warning" href="#">Chatbot</a>
+        </li>
+      </ul>
+      <a class="btn btn-outline-warning" href="{{ url_for('logout') }}">Logout</a>
+    </div>
+  </div>
+</nav>

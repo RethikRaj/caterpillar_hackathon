@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Operator Training</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #1a1a1a; /* lighter black */
+      color: #FFCC00;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .filter-toggle {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 50px;
+      height: 50px;
+      background-color: #FFCC00;
+      border: none;
+      border-radius: 50%;
+      color: #111;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 1001;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -320px;
+      width: 300px;
+      height: 100vh;
+      background-color: #2a2a2a;
+      color: #FFCC00;
+      padding: 20px;
+      box-shadow: 2px 0 5px rgba(255, 204, 0, 0.1);
+      transition: left 0.3s ease-in-out;
+      z-index: 1000;
+    }
+
+    .sidebar.open {
+      left: 0;
+    }
+
+    .filter-section h3 {
+      margin-bottom: 10px;
+      color: #FFCC00;
+    }
+
+    .filter-option {
+      margin-bottom: 10px;
+    }
+
+    .filter-option label {
+      color: #f0e68c;
+    }
+
+    .filter-option input[type="checkbox"] {
+      margin-right: 10px;
+      accent-color: #FFCC00;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+
+    .buttons button {
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 14px;
+      width: 45%;
+      cursor: pointer;
+    }
+
+    .cancel-btn {
+      background-color: transparent;
+      border: 2px solid #FFCC00;
+      color: #FFCC00;
+    }
+
+    .apply-btn {
+      background-color: #FFCC00;
+      color: #111111;
+      border: none;
+    }
+
+    .main-content {
+      padding: 40px;
+      transition: filter 0.3s ease-in-out;
+    }
+
+    .main-content.dimmed {
+      filter: brightness(0.5);
+    }
+
+    .card-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background-color: #262626;
+      border: 2px solid #FFCC00;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(255, 204, 0, 0.1);
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #FFCC00;
+    }
+
+    .level {
+      background-color: #FFCC00;
+      color: #111;
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin: 5px 0 10px 0;
+    }
+
+    .info {
+      font-size: 14px;
+      margin: 5px 0;
+      color: #f0e68c;
+    }
+
+    .week-days {
+      display: flex;
+      gap: 5px;
+      margin: 10px 0;
+    }
+
+    .day {
+      background-color: #FFCC00;
+      color: #111;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .book-btn {
+      margin-top: 12px;
+      background-color: #FFCC00;
+      color: #111;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .book-btn:hover {
+      background-color: #e6b800;
+    }
+
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 999;
+      display: none;
+    }
+
+    ::selection {
+      background: #FFCC00;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Filter Toggle Button -->
+  <button class="filter-toggle" onclick="toggleSidebar()">☰</button>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="filter-section">
+      <h3>Levels</h3>
+      <div class="filter-option">
+        <input type="checkbox" id="beginner" name="level" value="Beginner">
+        <label for="beginner">Beginner</label>
+      </div>
+      <div class="filter-option">
+        <input type="checkbox" id="intermediate" name="level" value="Intermediate">
+        <label for="intermediate">Intermediate</label>
+      </div>
+      <div class="filter-option">
+        <input type="checkbox" id="advanced" name="level" value="Advanced">
+        <label for="advanced">Advanced</label>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <h3>Duration</h3>
+      <div class="filter-option">
+        <input type="checkbox" id="less30" name="duration" value="less30">
+        <label for="less30">Less than 30 min</label>
+      </div>
+      <div class="filter-option">
+        <input type="checkbox" id="d45" name="duration" value="45">
+        <label for="d45">45 min</label>
+      </div>
+      <div class="filter-option">
+        <input type="checkbox" id="d60" name="duration" value="60">
+        <label for="d60">60 min</label>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button class="cancel-btn" onclick="resetFilters()">CANCEL</button>
+      <button class="apply-btn" onclick="applyFilters()">APPLY</button>
+    </div>
+  </div>
+
+  <!-- Overlay -->
+  <div id="overlay" onclick="toggleSidebar()"></div>
+
+  <!-- Main Content -->
+  <div class="main-content" id="mainContent">
+    <h1>Operator Training Classes</h1>
+    <div class="card-container" id="classList"></div>
+  </div>
+
+  <script>
+    const classes = [
+      { title: "Excavator Operation – Basic", level: "Beginner", durationMins: 30, durationWeeks: "2 to 4 weeks", instructor: "Ramesh", slots: 20, days: ["M", "T", "W"] },
+      { title: "Forklift Driving & Safety", level: "Intermediate", durationMins: 45, durationWeeks: "3 to 5 weeks", instructor: "Kiran", slots: 18, days: ["T", "Th", "F"] },
+      { title: "Loader Mastery", level: "Advanced", durationMins: 60, durationWeeks: "4 to 6 weeks", instructor: "Sandeep", slots: 15, days: ["M", "W", "F"] },
+      { title: "Skid-Steer Control", level: "Beginner", durationMins: 20, durationWeeks: "1 to 2 weeks", instructor: "Anita", slots: 22, days: ["M", "T"] },
+      { title: "Dump Truck Operations", level: "Intermediate", durationMins: 50, durationWeeks: "3 to 5 weeks", instructor: "Veer", slots: 17, days: ["W", "Th", "F"] },
+      { title: "Engine Maintenance", level: "Advanced", durationMins: 60, durationWeeks: "4 to 6 weeks", instructor: "Meena", slots: 14, days: ["M", "Th", "F"] },
+      { title: "Hydraulics 101", level: "Intermediate", durationMins: 40, durationWeeks: "2 to 4 weeks", instructor: "Raj", slots: 20, days: ["T", "Th"] },
+      { title: "Crane Handling", level: "Advanced", durationMins: 55, durationWeeks: "5 to 7 weeks", instructor: "Lakshmi", slots: 10, days: ["M", "T", "W", "Th"] },
+      { title: "Simulator VR Training", level: "Beginner", durationMins: 70, durationWeeks: "2 to 3 weeks", instructor: "Amit", slots: 25, days: ["F", "S"] }
+    ];
+
+    function renderClasses(filtered = []) {
+      const list = filtered.length ? filtered : classes;
+      const container = document.getElementById("classList");
+      container.innerHTML = "";
+
+      list.forEach((cls) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="title">${cls.title}</div>
+          <div class="level">${cls.level}</div>
+          <div class="info">⏱ ${cls.durationMins} mins</div>
+          <div class="info">🕒 ${cls.durationWeeks}</div>
+          <div class="week-days">${cls.days.map(day => `<div class="day">${day}</div>`).join("")}</div>
+          <div class="info">Instructor: ${cls.instructor}</div>
+          <div class="info">Slots Available: ${cls.slots} operators</div>
+          <button class="book-btn">Book</button>
+        `;
+        container.appendChild(card);
+
+        const button = card.querySelector(".book-btn");
+        button.addEventListener("click", () => {
+          button.innerText = "Booked ✅";
+          button.disabled = true;
+          button.style.backgroundColor = "#4CAF50";
+          button.style.color = "white";
+        });
+      });
+    }
+
+    function applyFilters() {
+      const selectedLevels = Array.from(document.querySelectorAll('input[name="level"]:checked')).map(i => i.value);
+      const lessThan30 = document.getElementById("less30").checked;
+      const dur45 = document.getElementById("d45").checked;
+      const dur60 = document.getElementById("d60").checked;
+
+      const filtered = classes.filter(cls => {
+        const levelMatch = selectedLevels.length === 0 || selectedLevels.includes(cls.level);
+        const durationMatch =
+          (!lessThan30 && !dur45 && !dur60) ||
+          (lessThan30 && cls.durationMins < 30) ||
+          (dur45 && cls.durationMins === 45) ||
+          (dur60 && cls.durationMins === 60);
+        return levelMatch && durationMatch;
+      });
+
+      renderClasses(filtered);
+      toggleSidebar();
+    }
+
+    function resetFilters() {
+      document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      renderClasses();
+      toggleSidebar();
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById("sidebar");
+      const overlay = document.getElementById("overlay");
+      const content = document.getElementById("mainContent");
+
+      sidebar.classList.toggle("open");
+      content.classList.toggle("dimmed");
+      overlay.style.display = sidebar.classList.contains("open") ? "block" : "none";
+    }
+
+    renderClasses();
+  </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🧩 Sequence Game Hub</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
+      color: #FFCC00;
+      text-align: center;
+      padding: 2rem;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin-bottom: 2rem;
+      color: #FFCC00;
+      text-shadow: 1px 1px 4px black;
+    }
+
+    .card-grid {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background: #262626;
+      border: 2px solid #FFCC00;
+      border-radius: 10px;
+      padding: 2rem;
+      width: 220px;
+      box-shadow: 0 4px 10px rgba(255, 204, 0, 0.1);
+      cursor: pointer;
+      position: relative;
+      color: #fff;
+      transition: 0.3s ease;
+    }
+
+    .card:hover {
+      background: #333;
+      transform: translateY(-5px);
+    }
+
+    .completed {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: #00cc66;
+      font-size: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧩 Sequence Game Hub</h1>
+
+  <div class="card-grid">
+    <div class="card" onclick="startTask('loader')">
+      🚜 Game 1 - Loader Task
+      <div id="done-loader" class="completed" style="display:none;">✅</div>
+    </div>
+    <div class="card" onclick="startTask('excavator')">
+      🏗️ Game 2 - Excavator Task
+      <div id="done-excavator" class="completed" style="display:none;">✅</div>
+    </div>
+  </div>
+
+  <script>
+    function startTask(task) {
+      window.location.href = `/game/${task}`;
+    }
+
+    ['loader', 'excavator'].forEach(task => {
+      if (localStorage.getItem(task + '_completed') === 'true') {
+        document.getElementById('done-' + task).style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

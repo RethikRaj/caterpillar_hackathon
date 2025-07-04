@@ -7,38 +7,117 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: linear-gradient(to bottom right, #fdfcfb, #e2d1c3);
-            font-family: 'Poppins', sans-serif;
-        }
-        .container {
-            margin-top: 40px;
-        }
-        .forum-header {
-            color: #5c3d00;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .card {
-            margin-bottom: 20px;
-        }
-        .like-button {
-            background: none;
-            border: none;
-            color: #dc3545;
-            font-size: 1.3rem;
-        }
-        .like-button:hover {
-            color: #a71d2a;
-        }
-        .btn-post {
-            background-color: #5c3d00;
-            color: white;
-        }
-        .btn-post:hover {
-            background-color: #3e2a00;
-        }
-    </style>
+    body {
+        background: linear-gradient(to bottom, #1f1f1f, #2e2e2e);
+        font-family: 'Poppins', sans-serif;
+        color: #f2f2f2;
+    }
+
+    .container {
+        margin-top: 40px;
+    }
+
+    .forum-header {
+        color: #FFCC00;
+        text-align: center;
+        margin-bottom: 30px;
+        font-weight: bold;
+        font-size: 2rem;
+        text-shadow: 1px 1px 4px rgba(255, 204, 0, 0.3);
+    }
+
+    .card {
+        background-color: #2a2a2a;
+        border-left: 6px solid #FFCC00;
+        border-radius: 10px;
+        box-shadow: 0px 4px 12px rgba(255, 204, 0, 0.1);
+        color: #ffffff;
+        margin : 20px;
+    }
+
+    .card-body h5 {
+        color: #FFCC00;
+    }
+
+    .form-group label {
+        color: #dddddd;
+    }
+
+    .form-control {
+        background-color: #1e1e1e;
+        border: 1px solid #FFCC00;
+        color: #ffffff;
+    }
+
+    .form-control::placeholder {
+        color: #aaaaaa;
+    }
+
+    .form-control:focus {
+        border-color: #ffdb4d;
+        outline: none;
+        box-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+    }
+
+    .btn-post {
+        background-color: #FFCC00;
+        color: #111111;
+        font-weight: bold;
+        border: none;
+    }
+
+    .btn-post:hover {
+        background-color: #e6b800;
+        color: #111;
+    }
+
+    .btn-secondary {
+        background-color: transparent;
+        border: 2px solid #FFCC00;
+        color: #FFCC00;
+    }
+
+    .btn-secondary:hover {
+        background-color: #FFCC00;
+        color: #111111;
+    }
+
+    .like-button {
+        background: none;
+        border: none;
+        color: #FF6666;
+        font-size: 1.4rem;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+
+    .like-button:hover {
+        color: #ff3333;
+    }
+
+    select {
+        background-color: #1c1c1c;
+        color: #fff;
+        border: 1px solid #FFCC00;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+
+    .btn-info {
+        background-color: #333333;
+        color: #FFCC00;
+        border: 1px solid #FFCC00;
+    }
+
+    .btn-info:hover {
+        background-color: #FFCC00;
+        color: #111;
+    }
+
+    small.text-muted {
+        color: #bbbbbb !important;
+    }
+</style>
 </head>
 <body>
     <div class="container">

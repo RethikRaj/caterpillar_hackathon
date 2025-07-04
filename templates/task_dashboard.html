@@ -1,34 +1,139 @@
-{% extends 'layout.html' %}
-{% block content %}
-<div class="container mt-4">
-  <h2 class="text-primary">Today's Tasks</h2>
-  <div class="mb-3">
-    <p><strong>Operator:</strong> {{ op }}</p>
-    <p><strong>Role:</strong> {{ role }}</p>
-    <p><strong>Machine:</strong> {{ machine }}</p>
-    <p><strong>Date:</strong> {{ date }}</p>
-  </div>
+{% include 'navbar_operator.html' %}
 
-  <form method="POST">
-    <div class="list-group">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Today's Tasks</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 850px;
+    }
+
+    h2.text-primary {
+      color: #ffcc00 !important;
+      font-weight: bold;
+    }
+
+    .task-card {
+      background: linear-gradient(145deg, #1a1a1a, #2c2c2c);
+      color: #fff;
+      border-left: 6px solid #ffcc00;
+      border-radius: 10px;
+      padding: 15px 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 12px rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .task-card input[type="checkbox"] {
+      transform: scale(1.3);
+      margin-right: 12px;
+    }
+
+    .task-title {
+      font-size: 1.1rem;
+    }
+
+    .btn-outline-primary {
+      color: #ffcc00;
+      border-color: #ffcc00;
+    }
+
+    .btn-outline-primary:hover {
+      background-color: #ffcc00;
+      color: #000;
+    }
+
+    .btn-outline-danger {
+      color: #ff4c4c;
+      border-color: #ff4c4c;
+    }
+
+    .btn-outline-danger:hover {
+      background-color: #ff4c4c;
+      color: #000;
+    }
+
+    .btn-success {
+      background-color: #28a745;
+      border-color: #28a745;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+    }
+
+    .label-group p {
+      margin-bottom: 5px;
+    }
+
+    .alert {
+      color: #000;
+    }
+
+    .alert-success {
+      background-color: #dfffc7;
+    }
+
+    .alert-warning {
+      background-color: #fff3cd;
+    }
+
+    .alert-danger {
+      background-color: #f8d7da;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for cat, msg in messages %}
+          <div class="alert alert-{{cat}} mt-2">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <h2 class="text-primary mb-4">Today's Tasks</h2>
+
+    <div class="label-group mb-4">
+      <p><strong>Operator:</strong> {{ op }}</p>
+      <p><strong>Role:</strong> {{ role }}</p>
+      <p><strong>Machine:</strong> {{ machine }}</p>
+      <p><strong>Date:</strong> {{ date }}</p>
+    </div>
+
+    <form method="POST">
       {% for task in tasks %}
-        <div class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
+        <div class="task-card">
+          <div class="d-flex align-items-center">
             <input type="checkbox" name="done_{{ loop.index0 }}" {% if task.done %}checked{% endif %}>
-            <span class="ms-2">{{ task.task }}</span>
+            <span class="task-title">{{ task.task }}</span>
           </div>
           <div class="btn-group">
-            <a href="{{ url_for('track_task', task_name=task.task) }}" class="btn btn-sm btn-outline-primary">Track Task</a>
-            <button type="submit" name="del_{{ loop.index0 }}" value="1" class="btn btn-sm btn-outline-danger">🗑️</button>
+            <a href="{{ url_for('track_task', task_name=task.task) }}" class="btn btn-sm btn-outline-primary">Track</a>
+            <button type="submit" name="del_{{ loop.index0 }}" value="1" class="btn btn-sm btn-outline-danger ms-2">🗑</button>
           </div>
         </div>
       {% endfor %}
-    </div>
 
-    <div class="mt-4">
-      <button type="submit" class="btn btn-success">Save Changes</button>
-      <a href="{{ url_for('performance') }}" class="btn btn-secondary ms-2">View My Performance</a>
-    </div>
-  </form>
-</div>
-{% endblock %}
+      <div class="mt-4">
+        <button type="submit" class="btn btn-success">Save Changes</button>
+        <a href="{{ url_for('performance') }}" class="btn btn-secondary ms-2">View My Performance</a>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

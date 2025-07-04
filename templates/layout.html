@@ -6,6 +6,58 @@
   <title>{{ title or "Smart Operator Assistant" }}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+    }
+
+    .navbar-dark.bg-primary {
+      background-color: #111 !important;
+      border-bottom: 2px solid #ffcc00;
+    }
+
+    .navbar-dark.bg-dark {
+      background-color: #111 !important;
+      border-bottom: 2px solid #ffcc00;
+    }
+
+    .navbar-brand,
+    .nav-link,
+    .navbar-toggler-icon,
+    .btn-outline-light {
+      color: #ffcc00 !important;
+    }
+
+    .btn-outline-light {
+      border-color: #ffcc00;
+    }
+
+    .btn-outline-light:hover {
+      background-color: #ffcc00;
+      color: #000 !important;
+    }
+
+    .alert {
+      color: #000;
+    }
+
+    .alert-success {
+      background-color: #dfffc7;
+    }
+
+    .alert-warning {
+      background-color: #fff3cd;
+    }
+
+    .alert-danger {
+      background-color: #f8d7da;
+    }
+
+    .container {
+      padding-bottom: 30px;
+    }
+  </style>
 </head>
 <body>
   {% if current_role %}
@@ -48,7 +100,7 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for cat, msg in messages %}
-          <div class="alert alert-{{cat}}">{{ msg }}</div>
+          <div class="alert alert-{{cat}} mt-2">{{ msg }}</div>
         {% endfor %}
       {% endif %}
     {% endwith %}

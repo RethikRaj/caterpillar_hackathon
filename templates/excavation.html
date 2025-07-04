@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🏗️ Excavation Task Game</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
+      color: #ffcc00;
+      text-align: center;
+      padding: 2rem;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    h1, h3, p {
+      color: #ffcc00;
+    }
+
+    .step-bank, .sequence-box {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 1rem auto;
+      padding: 1rem;
+      background: #111;
+      border: 2px dashed #ffcc00;
+      border-radius: 10px;
+      min-height: 100px;
+      width: 85%;
+    }
+
+    .step {
+      background: #ffcc00;
+      color: #000;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      user-select: none;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(255, 204, 0, 0.2);
+      transition: 0.2s ease;
+    }
+
+    .step:hover {
+      background: #e6b800;
+      transform: scale(1.05);
+    }
+
+    button {
+      padding: 12px 24px;
+      margin: 1rem 0.5rem;
+      font-size: 1rem;
+      background: #ffcc00;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #e6b800;
+    }
+
+    #result {
+      margin-top: 1rem;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🏗️ Arrange the Excavator Task Steps</h1>
+  <p>Click the steps in correct order to simulate an excavation operation.</p>
+
+  <h3>Steps Bank:</h3>
+  <div id="step-bank" class="step-bank"></div>
+
+  <h3>Your Sequence:</h3>
+  <div id="sequence-box" class="sequence-box"></div>
+
+  <button onclick="checkSequence()">✅ Submit</button>
+  <button onclick="goHome()">🏠 Back to Home</button>
+  <p id="result"></p>
+
+  <script>
+    const correctSteps = [
+      "Perform safety checks",
+      "Start the excavator",
+      "Position the excavator",
+      "Lower the boom",
+      "Dig the material",
+      "Lift the boom",
+      "Swing to dump location",
+      "Dump the material"
+    ];
+
+    let shuffledSteps = [...correctSteps].sort(() => Math.random() - 0.5);
+    const stepBank = document.getElementById("step-bank");
+    const sequenceBox = document.getElementById("sequence-box");
+    const resultText = document.getElementById("result");
+    let userSequence = [];
+
+    function renderSteps() {
+      stepBank.innerHTML = "";
+      shuffledSteps.forEach((step) => {
+        const el = document.createElement("div");
+        el.className = "step";
+        el.textContent = step;
+        el.onclick = () => addToSequence(step);
+        stepBank.appendChild(el);
+      });
+    }
+
+    function addToSequence(step) {
+      if (!userSequence.includes(step)) {
+        userSequence.push(step);
+        renderSequenceBox();
+      }
+    }
+
+    function removeFromSequence(step) {
+      userSequence = userSequence.filter(s => s !== step);
+      renderSequenceBox();
+    }
+
+    function renderSequenceBox() {
+      sequenceBox.innerHTML = "";
+      userSequence.forEach(step => {
+        const el = document.createElement("div");
+        el.className = "step";
+        el.textContent = step;
+        el.onclick = () => removeFromSequence(step);
+        sequenceBox.appendChild(el);
+      });
+    }
+
+    function checkSequence() {
+      if (userSequence.length !== correctSteps.length) {
+        resultText.textContent = "⚠️ Incomplete sequence. Try again.";
+        resultText.style.color = "orange";
+        return;
+      }
+      const isCorrect = userSequence.every((step, i) => step === correctSteps[i]);
+      if (isCorrect) {
+        resultText.textContent = "✅ Correct! Excavation task complete.";
+        resultText.style.color = "#00cc66";
+        localStorage.setItem("excavator_completed", "true");
+      } else {
+        resultText.textContent = "❌ Incorrect order. Try again!";
+        resultText.style.color = "red";
+      }
+    }
+
+    function goHome() {
+      window.location.href = "/sequence_game";
+    }
+
+    renderSteps();
+  </script>
+</body>
+</html>

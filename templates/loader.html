@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🚜 Loader Task Sequencing Game</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #000;
+      color: #FFD700;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    h1, h3, p {
+      color: #FFD700;
+    }
+
+    .step-bank, .sequence-box {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 1rem auto;
+      padding: 1rem;
+      background: #111;
+      border: 2px dashed #FFD700;
+      border-radius: 10px;
+      min-height: 100px;
+      width: 80%;
+    }
+
+    .step {
+      background: #FFD700;
+      color: #000;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      user-select: none;
+      font-weight: bold;
+    }
+
+    .step:hover {
+      background: #FFC300;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-top: 1rem;
+      font-size: 1rem;
+      background: #FFD700;
+      color: #000;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #FFC300;
+    }
+
+    #result {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🚜 Arrange the Loader Task Steps</h1>
+  <p>Click the steps in the correct order to perform a loader operation.</p>
+
+  <h3>Steps (Choose from here):</h3>
+  <div id="step-bank" class="step-bank"></div>
+
+  <h3>Your Sequence:</h3>
+  <div id="sequence-box" class="sequence-box"></div>
+
+  <button onclick="checkSequence()">✅ Submit</button>
+  <p id="result"></p>
+  <button onclick="goHome()">🏠 Back to Home</button>
+
+  <script>
+    const correctSteps = [
+      "Perform safety checks",
+      "Start the loader",
+      "Drive to loading area",
+      "Lower the bucket",
+      "Scoop the material",
+      "Lift the bucket",
+      "Transport to dump zone",
+      "Dump the material"
+    ];
+
+    let shuffledSteps = [...correctSteps].sort(() => Math.random() - 0.5);
+    const stepBank = document.getElementById("step-bank");
+    const sequenceBox = document.getElementById("sequence-box");
+    const resultText = document.getElementById("result");
+
+    let userSequence = [];
+
+    function renderSteps() {
+      stepBank.innerHTML = "";
+      shuffledSteps.forEach(step => {
+        const el = document.createElement("div");
+        el.className = "step";
+        el.textContent = step;
+        el.onclick = () => addToSequence(step);
+        stepBank.appendChild(el);
+      });
+    }
+
+    function addToSequence(step) {
+      if (!userSequence.includes(step)) {
+        userSequence.push(step);
+        renderSequenceBox();
+      }
+    }
+
+    function removeFromSequence(step) {
+      userSequence = userSequence.filter(s => s !== step);
+      renderSequenceBox();
+    }
+
+    function renderSequenceBox() {
+      sequenceBox.innerHTML = "";
+      userSequence.forEach(step => {
+        const el = document.createElement("div");
+        el.className = "step";
+        el.textContent = step;
+        el.onclick = () => removeFromSequence(step);
+        sequenceBox.appendChild(el);
+      });
+    }
+
+    function checkSequence() {
+      if (userSequence.length !== correctSteps.length) {
+        resultText.textContent = "⚠️ Incomplete sequence. Try again.";
+        resultText.style.color = "#FFA500";
+        return;
+      }
+
+      const isCorrect = userSequence.every((step, i) => step === correctSteps[i]);
+      if (isCorrect) {
+        resultText.textContent = "✅ Correct! You completed the task.";
+        resultText.style.color = "#00FF00";
+        localStorage.setItem("loader_completed", "true");
+      } else {
+        resultText.textContent = "❌ Incorrect order. Try again!";
+        resultText.style.color = "#FF0000";
+      }
+    }
+
+    function goHome() {
+      window.location.href = "index.html";
+    }
+
+    renderSteps();
+  </script>
+
+</body>
+</html>
